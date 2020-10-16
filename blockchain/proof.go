@@ -86,7 +86,7 @@ func ToHex(num int64) []byte {
 	buff := new(bytes.Buffer)
 	// func Write(w io.Writer, order ByteOrder, data interface{}) error
 	// https://golang.org/pkg/encoding/binary/#Write
-	// writes the binary representation of data into w. 
+	// writes the binary representation of data into w.
 	// Data must be a fixed-size value or a slice of fixed-size values, or a pointer to such data.
 	err := binary.Write(buff, binary.BigEndian, num)
 	if err != nil {
