@@ -2,25 +2,33 @@ package blockchain
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/gob"
 	"log"
 )
 
 type Block struct {
-	Hash     []byte //hash of this block
-	Data     []byte //data to be stored
-	PrevHash []byte //hash of prev block
-	Nonce    int
+	Hash         []byte //hash of this block
+	Transactions []*Transaction
+	PrevHash     []byte //hash of prev block
+	Nonce        int
 }
 
-// func (b *Block) DeriveHash() {
-// 	info := bytes.Join([][]byte{b.Data, b.PrevHash}, []byte{})
-// 	hash := sha256.Sum256(info)
-// 	b.Hash = hash[:]
-// }
+func (b *Block) HashTransactions() []byte {
+	var txHashes [][]byte
+	var txHash [32]byte
 
-func CreateBlock(data string, prevHash []byte) *Block {
-	block := &Block{[]byte{}, []byte(data), prevHash, 0}
+	for _, tx := range b.Transactions {
+		txHashes = append(txHashes, tx.ID)
+	}
+
+	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
+
+	return txHash[:]
+}
+
+func CreateBlock(txs []*Transaction, prevHash []byte) *Block {
+	block := &Block{[]byte{}, txs, prevHash, 0}
 	pow := NewProof(block)
 	nonce, hash := pow.Run()
 	block.Hash = hash[:]
@@ -28,8 +36,8 @@ func CreateBlock(data string, prevHash []byte) *Block {
 	return block
 }
 
-func Genesis() *Block {
-	return CreateBlock("Genesis", []byte{})
+func Genesis(coinbase *Transaction) *Block {
+	return CreateBlock([]*Transaction{coinbase}, []byte{})
 }
 
 // badgerDb accepts only arrays of bytes or slices of bytes
