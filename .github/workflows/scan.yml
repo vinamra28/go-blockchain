@@ -1,0 +1,47 @@
+name: CRDA scan
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # every day at midnight
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    name: Scan project
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: '^1.13.1'
+
+      - name: Install CRDA
+        uses: redhat-actions/openshift-tools-installer@v1
+        with:
+          source: github
+          crda: "latest"
+
+      - name: CRDA Scan
+        id: scan
+        uses: redhat-actions/crda@v1
+        with:
+          snyk_token: ${{ secrets.SNYK_TOKEN }}
+          fail_on: never
+
+      - name: Print JSON analysis report
+        if: ${{ always() && steps.scan.outputs.crda_report_json }}
+        run: cat ${{ steps.scan.outputs.crda_report_json }}
+
+      - name: Print SARIF analysis report
+        if: ${{ always() && steps.scan.outputs.crda_report_sarif }}
+        run: cat ${{ steps.scan.outputs.crda_report_sarif }}
+
+      - name: Print Report Link
+        run: echo ${{ steps.scan.outputs.report_link }}
