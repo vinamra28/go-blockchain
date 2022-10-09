@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: gh-logs-watcher
+spec:
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: github.com/tektoncd/catalog
+      workspaces:
+        - name: output
+          workspace: output
+    - name: logs-watcher
+      taskRef:
+        name: gh-logs-watcher
+      params:
+        - name: OWNER
+          value: divyansh42
+        - name: REPO
+          value: podman-login
+        - name: JOB_ID
+          value: "6804851026"
+      workspaces:
+        - name: secrets
+          workspace: secrets
+        - name: gh-logger
+          workspace: pvc
